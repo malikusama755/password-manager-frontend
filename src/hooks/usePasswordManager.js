@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 
+const BACKEND_URL = "https://password-manager-backend-production-f60d.up.railway.app";
+
 export default function usePasswordManager() {
   const [form, setForm] = useState({ site: '', username: '', password: '', _id: null });
   const [passwordArray, setPasswordArray] = useState([]);
@@ -9,7 +11,7 @@ export default function usePasswordManager() {
   // Fetch all passwords from backend
   const getPasswords = async () => {
     try {
-      const res = await fetch('http://localhost:3000/');
+      const res = await fetch(`${BACKEND_URL}/`);
       if (!res.ok) throw new Error('Failed to fetch passwords');
       const data = await res.json();
       setPasswordArray(data);
@@ -44,20 +46,19 @@ export default function usePasswordManager() {
         let res;
         if (form._id) {
           // Update existing password (DELETE + POST approach or PUT if backend supports)
-          // For now, delete old and insert new to keep simple
-          await fetch('http://localhost:3000/', {
+          await fetch(`${BACKEND_URL}/`, {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ _id: form._id }),
           });
-          res = await fetch('http://localhost:3000/', {
+          res = await fetch(`${BACKEND_URL}/`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ site: form.site, username: form.username, password: form.password }),
           });
         } else {
           // Add new password
-          res = await fetch('http://localhost:3000/', {
+          res = await fetch(`${BACKEND_URL}/`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ site: form.site, username: form.username, password: form.password }),
@@ -81,7 +82,7 @@ export default function usePasswordManager() {
   const deletePassword = async (id) => {
     if (window.confirm('Do you really want to delete this password?')) {
       try {
-        const res = await fetch('http://localhost:3000/', {
+        const res = await fetch(`${BACKEND_URL}/`, {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ _id: id }),
