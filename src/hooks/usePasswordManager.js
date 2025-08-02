@@ -3,12 +3,12 @@ import { useAuth } from "../context/AuthContext";
 
 function usePasswordManager() {
   const { token, logout } = useAuth();
-  const [form, setForm] = useState({ site: "", username: "", password: "" });
+  const [form, setForm] = useState({ site: "", username: "", password: "", _id: null });
   const [passwordArray, setPasswordArray] = useState([]);
   const [showPassword, setShowPassword] = useState(false);
 
   // Fetch passwords
-  useEffect(() => {
+  const fetchPasswords = () => {
     if (!token) return;
     fetch("https://password-manager-backend-production-f60d.up.railway.app/", {
       headers: {
@@ -24,39 +24,79 @@ function usePasswordManager() {
       })
       .then(setPasswordArray)
       .catch(console.error);
-  }, [token, logout]);
+  };
 
-  // Save password
+  useEffect(() => {
+    fetchPasswords();
+  }, [token]);
+
+  // Save password (create or update)
   const savePassword = async (data) => {
-    const res = await fetch("https://password-manager-backend-production-f60d.up.railway.app/", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(data),
-    });
-    if (!res.ok) throw new Error("Failed to save password");
-    // Optionally refetch passwords here
+    try {
+      // If _id exists, delete old and add new (no update route in backend)
+      if (data._id) {
+        await fetch("https://password-manager-backend-production-f60d.up.railway.app/", {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ _id: data._id }),
+        });
+      }
+
+      const res = await fetch("https://password-manager-backend-production-f60d.up.railway.app/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          site: data.site,
+          username: data.username,
+          password: data.password,
+        }),
+      });
+
+      if (!res.ok) throw new Error("Failed to save password");
+
+      setForm({ site: "", username: "", password: "", _id: null });
+      fetchPasswords();
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   // Delete password
   const deletePassword = async (_id) => {
-    const res = await fetch("https://password-manager-backend-production-f60d.up.railway.app/", {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ _id }),
-    });
-    if (!res.ok) throw new Error("Failed to delete password");
-    // Optionally refetch passwords here
+    try {
+      const res = await fetch("https://password-manager-backend-production-f60d.up.railway.app/", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ _id }),
+      });
+
+      if (!res.ok) throw new Error("Failed to delete password");
+      fetchPasswords();
+    } catch (error) {
+      console.error(error);
+    }
   };
 
-  // Edit password (implement as needed)
-  const editPassword = async (data) => {
-    // Add your edit logic here, always include Authorization header
+  // Edit password: populate form with existing password data
+  const editPassword = (id) => {
+    const item = passwordArray.find((p) => p._id === id);
+    if (item) {
+      setForm({
+        site: item.site,
+        username: item.username,
+        password: item.password,
+        _id: item._id,
+      });
+    }
   };
 
   // Copy text utility
