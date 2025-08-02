@@ -1,103 +1,104 @@
-import { useContext, useState } from "react";
-import { motion } from "framer-motion";
-import { toast } from "react-toastify";
-import { AuthContext } from "../context/AuthContext";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
-const BACKEND_URL = "https://password-manager-backend-production-f60d.up.railway.app";
+function Signup() {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-export default function Signup() {
-  const { login } = useContext(AuthContext);
+  const { login } = useAuth();
   const navigate = useNavigate();
-
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    password: "",
-  });
-
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (form.name.length < 3 || form.email.length < 5 || form.password.length < 5) {
-      toast.error("Please fill all fields properly", { theme: "dark" });
-      return;
-    }
+    setError("");
+    setLoading(true);
 
     try {
-      const res = await fetch(`${BACKEND_URL}/api/auth/signup`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(form),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || "Signup failed");
+      const response = await fetch(
+        "https://password-manager-backend-production-f60d.up.railway.app/auth/signup",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, email, password }),
+        }
+      );
+      const data = await response.json();
+      if (data.success) {
+        login(data.user, data.token); // Log in user after signup
+        navigate("/");
+      } else {
+        setError(data.message || "Signup failed");
       }
-
-      login(data.token); // save JWT to context + localStorage
-      toast.success("Account created! Redirecting...", { theme: "dark" });
-      navigate("/"); // Redirect to homepage
-
     } catch (err) {
-      toast.error(err.message || "Signup failed", { theme: "dark" });
+      setError("Network error");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <motion.div
-      className="min-h-screen flex items-center justify-center bg-gray-900 text-white px-4"
-      initial={{ opacity: 0, y: 40 }}
-      animate={{ opacity: 1, y: 0 }}
-    >
+    <div className="flex flex-col items-center justify-center min-h-screen bg-[#0a1f44] text-white">
       <form
         onSubmit={handleSubmit}
-        className="bg-gray-800 p-8 rounded-2xl shadow-lg w-full max-w-md space-y-4"
+        className="bg-[#112a61] p-8 rounded-lg shadow-lg w-full max-w-md"
       >
-        <h2 className="text-3xl font-bold text-amber-400">Sign Up</h2>
-
-        <input
-          type="text"
-          name="name"
-          placeholder="Name"
-          value={form.name}
-          onChange={handleChange}
-          className="w-full p-3 rounded bg-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-400"
-        />
-
-        <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          value={form.email}
-          onChange={handleChange}
-          className="w-full p-3 rounded bg-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-400"
-        />
-
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          value={form.password}
-          onChange={handleChange}
-          className="w-full p-3 rounded bg-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-400"
-        />
-
+        <h2 className="text-2xl font-bold mb-6 text-center">Sign Up</h2>
+        {error && (
+          <div className="mb-4 text-red-400 text-center">{error}</div>
+        )}
+        <div className="mb-4">
+          <label className="block mb-2">Name</label>
+          <input
+            type="text"
+            className="w-full p-3 rounded bg-[#0a1f44] border border-coral focus:outline-none focus:ring-2 focus:ring-coral text-white"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+            autoComplete="name"
+          />
+        </div>
+        <div className="mb-4">
+          <label className="block mb-2">Email</label>
+          <input
+            type="email"
+            className="w-full p-3 rounded bg-[#0a1f44] border border-coral focus:outline-none focus:ring-2 focus:ring-coral text-white"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            autoComplete="username"
+          />
+        </div>
+        <div className="mb-6">
+          <label className="block mb-2">Password</label>
+          <input
+            type="password"
+            className="w-full p-3 rounded bg-[#0a1f44] border border-coral focus:outline-none focus:ring-2 focus:ring-coral text-white"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            autoComplete="new-password"
+          />
+        </div>
         <button
           type="submit"
-          className="w-full bg-amber-500 hover:bg-amber-600 text-black font-semibold py-2 px-4 rounded transition"
+          className="w-full bg-coral text-white py-3 rounded font-semibold hover:bg-coral-dark transition"
+          disabled={loading}
         >
-          Create Account
+          {loading ? "Signing up..." : "Sign Up"}
         </button>
+        <div className="mt-4 text-center">
+          Already have an account?{" "}
+          <a href="/login" className="text-coral hover:underline">
+            Login
+          </a>
+        </div>
       </form>
-    </motion.div>
+    </div>
   );
 }
+
+export default Signup;
