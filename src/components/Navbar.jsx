@@ -1,6 +1,9 @@
-import React from 'react';
+import React, { useContext } from "react";
+import { AuthContext } from "../context/AuthContext";
 
 const Navbar = ({ toggleDrawer, showForm }) => {
+  const { user, logout } = useContext(AuthContext);
+
   return (
     <nav className="bg-[#071527] shadow-md py-4">
       <div className="max-w-6xl mx-auto px-6 flex justify-between items-center">
@@ -15,20 +18,47 @@ const Navbar = ({ toggleDrawer, showForm }) => {
           aria-label="Toggle drawer"
         >
           <SkullIcon className="w-7 h-7" />
-          <span className="font-semibold">{showForm ? 'Show Passwords' : 'Show Form'}</span>
+          <span className="font-semibold">{showForm ? "Show Passwords" : "Show Form"}</span>
         </button>
 
-        {/* Desktop GitHub link */}
-        <a
-          href="https://github.com/malik"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="hidden md:flex items-center gap-2 text-white hover:text-coral transition"
-          aria-label="GitHub"
-        >
-          <SkullIcon className="w-7 h-7" />
-          <span className="font-semibold">GitHub</span>
-        </a>
+        <div className="flex items-center gap-6">
+          {/* Desktop GitHub link */}
+          <a
+            href="https://github.com/malik"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden md:flex items-center gap-2 text-white hover:text-coral transition"
+            aria-label="GitHub"
+          >
+            <SkullIcon className="w-7 h-7" />
+            <span className="font-semibold">GitHub</span>
+          </a>
+
+          {/* Auth Buttons */}
+          {!user ? (
+            <>
+              <a
+                href="/login"
+                className="text-coral hover:text-[#ff4c4c] font-semibold transition hidden md:inline"
+              >
+                Login
+              </a>
+              <a
+                href="/signup"
+                className="ml-4 text-coral hover:text-[#ff4c4c] font-semibold transition hidden md:inline"
+              >
+                Signup
+              </a>
+            </>
+          ) : (
+            <button
+              onClick={logout}
+              className="text-coral hover:text-[#ff4c4c] font-semibold transition"
+            >
+              Logout
+            </button>
+          )}
+        </div>
       </div>
     </nav>
   );
