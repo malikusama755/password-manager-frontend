@@ -10,7 +10,7 @@ function usePasswordManager() {
   // Fetch passwords
   const fetchPasswords = () => {
     if (!token) return;
-    fetch("https://password-manager-backend-production-f60d.up.railway.app/", {
+    fetch("https://password-manager-backend-production-f60d.up.railway.app/passwords", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -35,17 +35,17 @@ function usePasswordManager() {
     try {
       // If _id exists, delete old and add new (no update route in backend)
       if (data._id) {
-        await fetch("https://password-manager-backend-production-f60d.up.railway.app/", {
+        await fetch("https://password-manager-backend-production-f60d.up.railway.app/passwords", {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ _id: data._id }),
+          body: JSON.stringify({ _id: data._id.toString() }),
         });
       }
 
-      const res = await fetch("https://password-manager-backend-production-f60d.up.railway.app/", {
+      const res = await fetch("https://password-manager-backend-production-f60d.up.railway.app/passwords", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -70,13 +70,13 @@ function usePasswordManager() {
   // Delete password
   const deletePassword = async (_id) => {
     try {
-      const res = await fetch("https://password-manager-backend-production-f60d.up.railway.app/", {
+      const res = await fetch("https://password-manager-backend-production-f60d.up.railway.app/passwords", {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ _id }),
+        body: JSON.stringify({ _id: _id.toString() }),
       });
 
       if (!res.ok) throw new Error("Failed to delete password");
@@ -88,13 +88,15 @@ function usePasswordManager() {
 
   // Edit password: populate form with existing password data
   const editPassword = (id) => {
-    const item = passwordArray.find((p) => p._id === id);
+    const item = passwordArray.find((p) => 
+      p._id === id || (p._id.toString && p._id.toString() === id)
+    );
     if (item) {
       setForm({
         site: item.site,
         username: item.username,
         password: item.password,
-        _id: item._id,
+        _id: item._id.toString ? item._id.toString() : item._id,
       });
     }
   };
