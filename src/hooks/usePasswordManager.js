@@ -1,122 +1,68 @@
-import { useEffect, useState } from "react";
-import { toast } from "react-toastify";
-import { useAuth } from "../context/AuthContext"; // import your auth hook
+import { useState, useEffect } from "react";
+import { useAuth } from "../context/AuthContext";
 
-const BACKEND_URL = "https://password-manager-backend-production-f60d.up.railway.app";
-
-export default function usePasswordManager() {
-  const { token } = useAuth(); // get token from context
-
-  const [form, setForm] = useState({ site: "", username: "", password: "", _id: null });
+function usePasswordManager() {
+  const { token, logout } = useAuth();
+  const [form, setForm] = useState({ site: "", username: "", password: "" });
   const [passwordArray, setPasswordArray] = useState([]);
   const [showPassword, setShowPassword] = useState(false);
 
-  // Fetch all passwords from backend
-  const getPasswords = async () => {
-    try {
-      const res = await fetch(`${BACKEND_URL}/`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-      if (!res.ok) throw new Error("Failed to fetch passwords");
-      const data = await res.json();
-      setPasswordArray(data);
-    } catch (error) {
-      toast.error("Failed to load passwords from server", { theme: "dark" });
-      console.error(error);
-    }
-  };
-
+  // Fetch passwords
   useEffect(() => {
-    if (token) getPasswords();
-  }, [token]);
-
-  // Other functions (copyText, toggleShowPassword) unchanged
-
-  // Save or update password
-  const savePassword = async () => {
-    if (
-      form.site.trim().length > 3 &&
-      form.username.trim().length > 3 &&
-      form.password.trim().length > 3
-    ) {
-      try {
-        let res;
-        if (form._id) {
-          await fetch(`${BACKEND_URL}/`, {
-            method: "DELETE",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ _id: form._id }),
-          });
-          res = await fetch(`${BACKEND_URL}/`, {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              site: form.site,
-              username: form.username,
-              password: form.password,
-            }),
-          });
-        } else {
-          res = await fetch(`${BACKEND_URL}/`, {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              site: form.site,
-              username: form.username,
-              password: form.password,
-            }),
-          });
+    if (!token) return;
+    fetch("https://password-manager-backend-production-f60d.up.railway.app/", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((res) => {
+        if (!res.ok) {
+          if (res.status === 401) logout();
+          throw new Error("Failed to fetch passwords");
         }
+        return res.json();
+      })
+      .then(setPasswordArray)
+      .catch(console.error);
+  }, [token, logout]);
 
-        if (!res.ok) throw new Error("Failed to save password");
-        setForm({ site: "", username: "", password: "", _id: null });
-        toast.success("Password saved!", { theme: "dark", autoClose: 2000 });
-        getPasswords();
-      } catch (error) {
-        toast.error("Failed to save password", { theme: "dark" });
-        console.error(error);
-      }
-    } else {
-      toast.error("Please fill all fields with more than 3 characters!", { theme: "dark" });
-    }
+  // Save password
+  const savePassword = async (data) => {
+    const res = await fetch("https://password-manager-backend-production-f60d.up.railway.app/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error("Failed to save password");
+    // Optionally refetch passwords here
   };
 
   // Delete password
-  const deletePassword = async (id) => {
-    if (window.confirm("Do you really want to delete this password?")) {
-      try {
-        const res = await fetch(`${BACKEND_URL}/`, {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ _id: id }),
-        });
-        if (!res.ok) throw new Error("Failed to delete password");
-        toast.info("Password deleted!", { theme: "dark", autoClose: 2000 });
-        getPasswords();
-      } catch (error) {
-        toast.error("Failed to delete password", { theme: "dark" });
-        console.error(error);
-      }
-    }
+  const deletePassword = async (_id) => {
+    const res = await fetch("https://password-manager-backend-production-f60d.up.railway.app/", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ _id }),
+    });
+    if (!res.ok) throw new Error("Failed to delete password");
+    // Optionally refetch passwords here
   };
 
-  // Edit password unchanged
+  // Edit password (implement as needed)
+  const editPassword = async (data) => {
+    // Add your edit logic here, always include Authorization header
+  };
+
+  // Copy text utility
+  const copyText = (text) => navigator.clipboard.writeText(text);
+
+  const toggleShowPassword = () => setShowPassword((v) => !v);
 
   return {
     form,
@@ -130,3 +76,5 @@ export default function usePasswordManager() {
     showPassword,
   };
 }
+
+export default usePasswordManager;
