@@ -53,7 +53,7 @@ function Login() {
           <label className="block mb-2">Email</label>
           <input
             type="email"
-            className="w-full p-3 rounded bg-[#0a1f44] border border-coral focus:outline-none focus:ring-2 focus:ring-coral text-white"
+            className="w-full p-3 rounded bg-[#0a1f44] border border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500 text-white"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -64,7 +64,7 @@ function Login() {
           <label className="block mb-2">Password</label>
           <input
             type="password"
-            className="w-full p-3 rounded bg-[#0a1f44] border border-coral focus:outline-none focus:ring-2 focus:ring-coral text-white"
+            className="w-full p-3 rounded bg-[#0a1f44] border border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500 text-white"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
@@ -73,14 +73,14 @@ function Login() {
         </div>
         <button
           type="submit"
-          className="w-full bg-coral text-white py-3 rounded font-semibold hover:bg-coral-dark transition"
+          className="w-full bg-orange-500 text-white py-3 rounded font-semibold hover:bg-orange-600 transition"
           disabled={loading}
         >
           {loading ? "Logging in..." : "Login"}
         </button>
         <div className="mt-4 text-center">
           Don't have an account?{" "}
-          <a href="/signup" className="text-coral hover:underline">
+          <a href="/signup" className="text-orange-400 hover:underline">
             Sign up
           </a>
         </div>

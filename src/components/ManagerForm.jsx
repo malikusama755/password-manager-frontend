@@ -5,7 +5,6 @@ const ManagerForm = ({ form, setForm, savePassword, toggleShowPassword, showPass
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  // Password strength logic
   const passwordStrength = useMemo(() => {
     const pwd = form.password || '';
     let score = 0;
@@ -23,7 +22,7 @@ const ManagerForm = ({ form, setForm, savePassword, toggleShowPassword, showPass
     <form
       onSubmit={(e) => {
         e.preventDefault();
-        savePassword();
+        savePassword(form);  // <-- This is the key fix
       }}
       className="flex flex-col gap-6"
     >
@@ -64,7 +63,6 @@ const ManagerForm = ({ form, setForm, savePassword, toggleShowPassword, showPass
         </button>
       </div>
 
-      {/* Password strength meter */}
       {form.password && (
         <div className="flex items-center gap-2">
           <div
